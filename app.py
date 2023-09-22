@@ -21,6 +21,7 @@ from sklearn.metrics import mean_squared_error
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from predcit_salary import predict
 
 plt.style.use('fivethirtyeight')
 
