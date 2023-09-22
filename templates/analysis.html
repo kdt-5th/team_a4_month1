@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Data Science Salaries</title>
+</head>
+
+<body>
+    <div class="top">
+        <p>1st Monthly Project</p>
+        <p></p>
+        <h2>Data Science Salaries</h2>
+    </div>
+    <div class="menu-wrapper">
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/analysis">Analysis</a>
+            <a href="/conclusion">Conclusion</a>
+            <a href="/predict">Predict Model</a>
+        </div>
+    </div>
+
+    <div class="hdtext-container" style="font-size: 36px; margin-top: 24px; margin-right: 24px; margin-left: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <p>Data Science Salaries EDA</p>
+        </div>
+
+    <style>
+        img {
+            display: block;
+            margin: 0 auto;
+            max-width: 60%;
+        }  
+        .center-graph {
+            text-align: center;
+         }
+    </style>
+
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+    [Employee Residence Distribution Map]
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[0] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        [Objective Variable 분포]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            <img src="{{ image_paths[0] }}" alt="Seaborn Plot">
+        </p>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+            <br><br>[Experience Level 비율]<br>
+    </div>
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[1] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Work Year별 Experience Level 기준 연봉 변화]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            <img src="{{ image_paths[1] }}" alt="Seaborn Plot">
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Job 분포]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[2] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Top 10 Job Titles]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[3] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Mean Salary]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            <img src="{{ image_paths[2] }}" alt="Seaborn Plot">
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Mean Salary Distribution Map]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[4] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Experience Level 연봉 비율]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            {{ graph_html_list[5] | safe }}
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Experience Level별 Company Size에 따른 연봉 분포]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            <img src="{{ image_paths[3] }}" alt="Seaborn Plot">
+        </p>
+    </div>
+    <div class="text-container" style="font-size: 24px; margin-top: 24px; display: flex; justify-content: center; font-family: Times New Roman;">
+        <br><br>[Objective Variable Heatmap]<br>
+    </div>
+    <div class = "center-graph">
+        <p>
+            <img src="{{ image_paths[4] }}" alt="Seaborn Plot">
+
+        </p>
+    </div>
+    </p>
+
+</body>
+
+</html>
