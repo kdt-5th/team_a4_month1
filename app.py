@@ -1,16 +1,13 @@
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.graph_objects as go
 import plotly.express as px
-import plotly.offline as pyo 
-import plotly.figure_factory as ff
 import plotly.io as pio
-
 import country_converter as coco
 import warnings
 import os, sys
+import copy
 
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression
@@ -25,18 +22,30 @@ from sklearn.metrics import mean_squared_error
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from predict_salary import predict
+
 
 plt.style.use('fivethirtyeight')
 
 app = Flask(__name__)
 
+#현재 파일의 절대경로
+path = os.path.dirname(os.path.abspath(__file__)) 
+
+
 @app.route('/')
 def index():
+    static_path = 'static/'
+
+    image_paths = []
+
     graphs = []
     # 데이터 불러오기
     
     # original_df = pd.read_csv('./archive/ds_salaries.csv')
-    original_df = pd.read_csv('C:/Users/Jena_laptop/Desktop/programers_kdt/project/data_science_salaries/data_science_salaries/archive/ds_salaries.csv')
+    #original_df = pd.read_csv('C:/Users/Jena_laptop/Desktop/programers_kdt/project/data_science_salaries/data_science_salaries/archive/ds_salaries.csv')
+    original_df = pd.read_csv(os.path.join(path, "archive/ds_salaries.csv"))
+
 
     # 작업 분류
     # 직업과 해당 범주를 딕셔너리로 매핑
@@ -67,9 +76,9 @@ def index():
         'Machine Learning Researcher': '머신 러닝 엔지니어',
         'MLOps Engineer': '머신 러닝 엔지니어',
         'Research Engineer' : '머신 러닝 엔지니어',
-        'Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Applied Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Machine Learning Software Engineer' : '머신러닝 엔지니어',
+        'Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Applied Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Machine Learning Software Engineer' : '머신 러닝 엔지니어',
 
 
         'Marketing Data Engineer': '데이터 엔지니어',
@@ -176,10 +185,10 @@ def index():
     original_df['experience_level'] = original_df['experience_level'].replace('SE', 'Expert')
     original_df['experience_level'] = original_df['experience_level'].replace('EX', 'Director')
 
-    original_df['employment_type'] = original_df['employment_type'].replace('FT', ' Full-Time')
-    original_df['employment_type'] = original_df['employment_type'].replace('CT', ' Contract')
-    original_df['employment_type'] = original_df['employment_type'].replace('FL', ' Freelance')
-    original_df['employment_type'] = original_df['employment_type'].replace('PT', ' Part-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('FT', 'Full-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('CT', 'Contract')
+    original_df['employment_type'] = original_df['employment_type'].replace('FL', 'Freelance')
+    original_df['employment_type'] = original_df['employment_type'].replace('PT', 'Part-Time')
 
 
     #---------------------------------------------------------
@@ -198,61 +207,28 @@ def index():
     # 그래프를 HTML 형태로 변환
     graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
-
-    # fig2, ax = plt.subplots(3,3, figsize=(15,15))
-
-    # for row in ax:
-    #     for subplot in row:
-    #         subplot.tick_params(axis='x', labelrotation=45)
-    # sns.countplot(original_df, x='work_year', ax=ax[0,0])
-    # sns.countplot(original_df, x='experience_level', ax=ax[0,1])
-    # sns.countplot(original_df, x='employment_type', ax=ax[0,2])
-    # sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
-    # sns.countplot(original_df, x='Country_Grouped', ax=ax[1,1])
-    # sns.countplot(original_df, x='remote_ratio', ax=ax[1,2])
-    # sns.countplot(original_df, x='Company_Grouped', ax=ax[2,0])
-    # sns.countplot(original_df, x='company_size', ax=ax[2,1])
-    # sns.countplot(original_df, x='residence_continent', ax=ax[2,2])
-
-    # plt.xticks(rotation=45)
-    # plt.tight_layout()
     
-    # graph_html2 = pio.to_html(fig2)
+    fig, ax = plt.subplots(3,3, figsize=(15,15))
+    for row in ax:
+        for subplot in row:
+            subplot.tick_params(axis='x', labelrotation=45)
+    sns.countplot(original_df, x='work_year', ax=ax[0,0])
+    sns.countplot(original_df, x='experience_level', ax=ax[0,1])
+    sns.countplot(original_df, x='employment_type', ax=ax[0,2])
+    sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
+    sns.countplot(original_df, x='Country_Grouped', ax=ax[1,1])
+    sns.countplot(original_df, x='remote_ratio', ax=ax[1,2])
+    sns.countplot(original_df, x='Company_Grouped', ax=ax[2,0])
+    sns.countplot(original_df, x='company_size', ax=ax[2,1])
+    sns.countplot(original_df, x='residence_continent', ax=ax[2,2])
 
+    plt.xticks(rotation=45)
+    plt.tight_layout()
 
-    #---------------------------------------------------------
-    # 데이터 로딩 예제 (데이터 로딩 부분은 실제 데이터에 맞게 수정해야 합니다)
-    # figs1, ax = plt.subplots(3,3, figsize=(15,15))
-    fig = make_subplots(rows=3, cols=3)
-    
-
-    # Plotly 그래프로 변환
-    fig_temp_2 = px.bar(original_df, x='work_year', color='work_year')
-    fig_temp_3 = px.bar(original_df, x='experience_level', color='experience_level')
-    fig_temp_4 = px.bar(original_df, x='employment_type', color='employment_type')
-    fig_temp_5 = px.histogram(original_df, x='salary_in_usd', nbins=20, color='salary_in_usd')
-    fig_temp_6 = px.bar(original_df, x='Country_Grouped', color='Country_Grouped')
-    fig_temp_7 = px.bar(original_df, x='remote_ratio', color='remote_ratio')
-    fig_temp_8 = px.bar(original_df, x='Company_Grouped', color='Company_Grouped')
-    fig_temp_9 = px.bar(original_df, x='company_size', color='company_size')
-    fig_temp_10 = px.bar(original_df, x='residence_continent', color='residence_continent')
-
-    # 그래프를 서브 플롯 위치에 배치
-    
-    fig.add_trace(fig_temp_2.data[0], row=1, col=1)
-    fig.add_trace(fig_temp_3.data[0], row=1, col=2)
-    fig.add_trace(fig_temp_4.data[0], row=1, col=3)
-    fig.add_trace(fig_temp_5.data[0], row=2, col=1)
-    fig.add_trace(fig_temp_6.data[0], row=2, col=2)
-    fig.add_trace(fig_temp_7.data[0], row=2, col=3)
-    fig.add_trace(fig_temp_8.data[0], row=3, col=1)
-    fig.add_trace(fig_temp_9.data[0], row=3, col=2)
-    fig.add_trace(fig_temp_10.data[0], row=3, col=3)
-       # 그래프 레이아웃 설정
-    fig.update_layout(height=600, width=800, showlegend=False, title_text='Subplots Example')
-
-    # HTML로 변환
-    graphs.append(pio.to_html(fig))
+    image_path = static_path + 'seaborn_plot_1.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
 
     #---------------------------------------------------------
     level_avg = original_df[['salary_in_usd', 'experience_level']].groupby('experience_level').mean()
@@ -261,7 +237,6 @@ def index():
 
     fig.update_traces(hole=.3, textinfo='percent+label')
     graphs.append(pio.to_html(fig))
-
 
     #---------------------------------------------------------
     # - 'work_year'별 'experience_level'기준 salary 변화
@@ -278,7 +253,10 @@ def index():
     )
 
     # HTML로 변환
-    graphs.append(pio.to_html(fig))
+    image_path = static_path + 'seaborn_plot_2.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
     # Job 분포
     total = len(original_df)
@@ -336,35 +314,40 @@ def index():
 
     #---------------------------------------------------------
     # 전세계 기준
-    # fig, ax = plt.subplots(3,3, figsize=(15,12))
+    fig, ax = plt.subplots(3,3, figsize=(15,12))
 
-    # for row in ax:
-    #     for subplot in row:
-    #         subplot.tick_params(axis='x', labelrotation=45)
+    for row in ax:
+        for subplot in row:
+            subplot.tick_params(axis='x', labelrotation=45)
             
-    # sns.barplot(original_df, y='salary_in_usd',x='work_year', ax=ax[0,0])
-    # sns.barplot(original_df, y='salary_in_usd',x='experience_level', ax=ax[0,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='employment_type', ax=ax[0,2])
-    # sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
+    sns.barplot(original_df, y='salary_in_usd',x='work_year', ax=ax[0,0])
+    sns.barplot(original_df, y='salary_in_usd',x='experience_level', ax=ax[0,1])
+    sns.barplot(original_df, y='salary_in_usd',x='employment_type', ax=ax[0,2])
+    sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
 
-    # sns.barplot(original_df, y='salary_in_usd',x='Country_Grouped', ax=ax[1,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='remote_ratio', ax=ax[1,2])
-    # sns.barplot(original_df, y='salary_in_usd',x='Company_Grouped', ax=ax[2,0])
-    # sns.barplot(original_df, y='salary_in_usd',x='company_size', ax=ax[2,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='residence_continent', ax=ax[2,2])
+    sns.barplot(original_df, y='salary_in_usd',x='Country_Grouped', ax=ax[1,1])
+    sns.barplot(original_df, y='salary_in_usd',x='remote_ratio', ax=ax[1,2])
+    sns.barplot(original_df, y='salary_in_usd',x='Company_Grouped', ax=ax[2,0])
+    sns.barplot(original_df, y='salary_in_usd',x='company_size', ax=ax[2,1])
+    sns.barplot(original_df, y='salary_in_usd',x='residence_continent', ax=ax[2,2])
 
-    # for i in range(3):
-    #     for j in range(3):
-    #         if (i, j) != (1, 0):
-    #             for p in ax[i, j].patches:
-    #                 ax[i, j].annotate(format(p.get_height(), '.2f'), 
-    #                                 (p.get_x() + p.get_width() / 2., p.get_height()), 
-    #                                 ha='center', va='center', 
-    #                                 xytext=(0, 10), 
-    #                                 textcoords='offset points')
+    for i in range(3):
+        for j in range(3):
+            if (i, j) != (1, 0):
+                for p in ax[i, j].patches:
+                    ax[i, j].annotate(format(p.get_height(), '.2f'), 
+                                    (p.get_x() + p.get_width() / 2., p.get_height()), 
+                                    ha='center', va='center', 
+                                    xytext=(0, 10), 
+                                    textcoords='offset points')
 
-    # plt.tight_layout()
-    # plt.show()
+    plt.tight_layout()
+    
+    image_path = static_path + 'seaborn_plot_3.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
+
     #---------------------------------------------------------
     original_df['company_location'] = coco.convert(original_df['employee_residence'], to='ISO3')
     company_salary = original_df.groupby('company_location')['salary_in_usd'].mean()
@@ -379,17 +362,20 @@ def index():
     graphs.append(pio.to_html(fig))
 
     #---------------------------------------------------------
-    # exp_idx = original_df.experience_level.unique()
+    exp_idx = original_df.experience_level.unique()
 
-    # plt.figure(figsize=(10,6))
-    # sns.set_style('darkgrid')
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Junior'] , bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Senior'], bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Expert'], bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Director'], bw=.5)
+    plt.figure(figsize=(10,6))
+    sns.set_style('darkgrid')
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Junior'] , bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Senior'], bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Expert'], bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Director'], bw=.5)
 
-    # plt.legend(['Junior','Senior','Expert','Director'])
-    # plt.show()
+    plt.legend(['Junior','Senior','Expert','Director'])
+    image_path = static_path + 'seaborn_plot_4.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
     fig = px.box(original_df, x='experience_level', y='salary_in_usd', color='company_size', height=600, width=1100)
     graphs.append(pio.to_html(fig))
@@ -403,13 +389,34 @@ def index():
     for col in obj_cols:
         labeled_df[col] = le.fit_transform(labeled_df[col])
 
-    labeled_df
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
+    
+    image_path = static_path + 'seaborn_plot_5.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
-
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
+    image_path = static_path + 'seaborn_plot_6.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
 
     
-    return render_template('index.html', graph_html_list=graphs)
+    return render_template('index.html', graph_html_list=graphs, image_paths=image_paths)
 
+# 예측값 계산용
+@app.route('/submit/', methods=['POST'])
+def predict_calc():
+    salary = predict(request)
+    return jsonify({"val":salary})
+
+
+@app.route('/predict')
+def predict_sal():
+    return render_template('predict.html')
 
 
 if __name__ == '__main__':
