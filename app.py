@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -11,6 +11,7 @@ import plotly.io as pio
 import country_converter as coco
 import warnings
 import os, sys
+import copy
 
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression
@@ -25,10 +26,15 @@ from sklearn.metrics import mean_squared_error
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from predict_salary import predict
 
 plt.style.use('fivethirtyeight')
 
 app = Flask(__name__)
+
+#현재 파일의 절대경로
+path = os.path.dirname(os.path.abspath(__file__)) 
+
 
 @app.route('/')
 def index():
@@ -36,7 +42,8 @@ def index():
     # 데이터 불러오기
     
     # original_df = pd.read_csv('./archive/ds_salaries.csv')
-    original_df = pd.read_csv('C:/Users/Jena_laptop/Desktop/programers_kdt/project/data_science_salaries/data_science_salaries/archive/ds_salaries.csv')
+    #original_df = pd.read_csv('C:/Users/Jena_laptop/Desktop/programers_kdt/project/data_science_salaries/data_science_salaries/archive/ds_salaries.csv')
+    original_df = pd.read_csv(os.path.join(path, "archive/ds_salaries.csv"))
 
     # 작업 분류
     # 직업과 해당 범주를 딕셔너리로 매핑
@@ -410,6 +417,16 @@ def index():
     
     return render_template('index.html', graph_html_list=graphs)
 
+# 예측값 계산용
+@app.route('/submit/', methods=['POST'])
+def predict_calc():
+    salary = predict(request)
+    return jsonify({"val":salary})
+
+
+@app.route('/predict')
+def predict_sal():
+    return render_template('predict.html')
 
 
 if __name__ == '__main__':
