@@ -2,29 +2,9 @@ from flask import Flask, render_template
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.graph_objects as go
 import plotly.express as px
-import plotly.offline as pyo 
-import plotly.figure_factory as ff
 import plotly.io as pio
-
 import country_converter as coco
-import warnings
-import os, sys
-
-from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from xgboost import XGBRegressor
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from catboost import CatBoostRegressor, Pool
-from sklearn.metrics import mean_squared_error
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 plt.style.use('fivethirtyeight')
 
@@ -32,10 +12,16 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    static_path = 'static/'
+
+    image_paths = []
+
     graphs = []
     # 데이터 불러오기
     
-    original_df = pd.read_csv('./archive/ds_salaries.csv')
+    # original_df = pd.read_csv('./archive/ds_salaries.csv')
+    original_df = pd.read_csv('archive/ds_salaries.csv')
+
     
 
     # 작업 분류
@@ -198,26 +184,29 @@ def index():
     # 그래프를 HTML 형태로 변환
     graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
-
-    # fig2, ax = plt.subplots(3,3, figsize=(15,15))
-
-    # for row in ax:
-    #     for subplot in row:
-    #         subplot.tick_params(axis='x', labelrotation=45)
-    # sns.countplot(original_df, x='work_year', ax=ax[0,0])
-    # sns.countplot(original_df, x='experience_level', ax=ax[0,1])
-    # sns.countplot(original_df, x='employment_type', ax=ax[0,2])
-    # sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
-    # sns.countplot(original_df, x='Country_Grouped', ax=ax[1,1])
-    # sns.countplot(original_df, x='remote_ratio', ax=ax[1,2])
-    # sns.countplot(original_df, x='Company_Grouped', ax=ax[2,0])
-    # sns.countplot(original_df, x='company_size', ax=ax[2,1])
-    # sns.countplot(original_df, x='residence_continent', ax=ax[2,2])
-
-    # plt.xticks(rotation=45)
-    # plt.tight_layout()
     
-    # graph_html2 = pio.to_html(fig2)
+    fig, ax = plt.subplots(3,3, figsize=(15,15))
+    for row in ax:
+        for subplot in row:
+            subplot.tick_params(axis='x', labelrotation=45)
+    sns.countplot(original_df, x='work_year', ax=ax[0,0])
+    sns.countplot(original_df, x='experience_level', ax=ax[0,1])
+    sns.countplot(original_df, x='employment_type', ax=ax[0,2])
+    sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
+    sns.countplot(original_df, x='Country_Grouped', ax=ax[1,1])
+    sns.countplot(original_df, x='remote_ratio', ax=ax[1,2])
+    sns.countplot(original_df, x='Company_Grouped', ax=ax[2,0])
+    sns.countplot(original_df, x='company_size', ax=ax[2,1])
+    sns.countplot(original_df, x='residence_continent', ax=ax[2,2])
+
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    image_path = static_path + 'seaborn_plot_1.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
+
     #---------------------------------------------------------
     level_avg = original_df[['salary_in_usd', 'experience_level']].groupby('experience_level').mean()
 
@@ -226,23 +215,25 @@ def index():
     fig.update_traces(hole=.3, textinfo='percent+label')
     graphs.append(pio.to_html(fig))
 
-
     #---------------------------------------------------------
     # - 'work_year'별 'experience_level'기준 salary 변화
     
-    # fig = px.line(original_df, x='work_year', y='salary_in_usd', color='experience_level', line_shape='linear')
+    fig = px.line(original_df, x='work_year', y='salary_in_usd', color='experience_level', line_shape='linear')
 
-    # # 제목, 레이블, 범례 폰트 크기 등의 추가 설정
-    # fig.update_layout(
-    #     title="Salary vs. Work Year based on Experience Level",
-    #     xaxis_title="Work Year",
-    #     yaxis_title="Salary in USD",
-    #     legend_title="Experience Level",
-    #     legend_font_size=12
-    # )
+    # 제목, 레이블, 범례 폰트 크기 등의 추가 설정
+    fig.update_layout(
+        title="Salary vs. Work Year based on Experience Level",
+        xaxis_title="Work Year",
+        yaxis_title="Salary in USD",
+        legend_title="Experience Level",
+        legend_font_size=12
+    )
 
-    # # HTML로 변환
-    # graphs.append(pio.to_html(fig))
+    # HTML로 변환
+    image_path = static_path + 'seaborn_plot_2.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
     # Job 분포
     total = len(original_df)
@@ -300,35 +291,40 @@ def index():
 
     #---------------------------------------------------------
     # 전세계 기준
-    # fig, ax = plt.subplots(3,3, figsize=(15,12))
+    fig, ax = plt.subplots(3,3, figsize=(15,12))
 
-    # for row in ax:
-    #     for subplot in row:
-    #         subplot.tick_params(axis='x', labelrotation=45)
+    for row in ax:
+        for subplot in row:
+            subplot.tick_params(axis='x', labelrotation=45)
             
-    # sns.barplot(original_df, y='salary_in_usd',x='work_year', ax=ax[0,0])
-    # sns.barplot(original_df, y='salary_in_usd',x='experience_level', ax=ax[0,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='employment_type', ax=ax[0,2])
-    # sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
+    sns.barplot(original_df, y='salary_in_usd',x='work_year', ax=ax[0,0])
+    sns.barplot(original_df, y='salary_in_usd',x='experience_level', ax=ax[0,1])
+    sns.barplot(original_df, y='salary_in_usd',x='employment_type', ax=ax[0,2])
+    sns.histplot(original_df, x='salary_in_usd', kde=True, ax=ax[1,0])
 
-    # sns.barplot(original_df, y='salary_in_usd',x='Country_Grouped', ax=ax[1,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='remote_ratio', ax=ax[1,2])
-    # sns.barplot(original_df, y='salary_in_usd',x='Company_Grouped', ax=ax[2,0])
-    # sns.barplot(original_df, y='salary_in_usd',x='company_size', ax=ax[2,1])
-    # sns.barplot(original_df, y='salary_in_usd',x='residence_continent', ax=ax[2,2])
+    sns.barplot(original_df, y='salary_in_usd',x='Country_Grouped', ax=ax[1,1])
+    sns.barplot(original_df, y='salary_in_usd',x='remote_ratio', ax=ax[1,2])
+    sns.barplot(original_df, y='salary_in_usd',x='Company_Grouped', ax=ax[2,0])
+    sns.barplot(original_df, y='salary_in_usd',x='company_size', ax=ax[2,1])
+    sns.barplot(original_df, y='salary_in_usd',x='residence_continent', ax=ax[2,2])
 
-    # for i in range(3):
-    #     for j in range(3):
-    #         if (i, j) != (1, 0):
-    #             for p in ax[i, j].patches:
-    #                 ax[i, j].annotate(format(p.get_height(), '.2f'), 
-    #                                 (p.get_x() + p.get_width() / 2., p.get_height()), 
-    #                                 ha='center', va='center', 
-    #                                 xytext=(0, 10), 
-    #                                 textcoords='offset points')
+    for i in range(3):
+        for j in range(3):
+            if (i, j) != (1, 0):
+                for p in ax[i, j].patches:
+                    ax[i, j].annotate(format(p.get_height(), '.2f'), 
+                                    (p.get_x() + p.get_width() / 2., p.get_height()), 
+                                    ha='center', va='center', 
+                                    xytext=(0, 10), 
+                                    textcoords='offset points')
 
-    # plt.tight_layout()
-    # plt.show()
+    plt.tight_layout()
+    
+    image_path = static_path + 'seaborn_plot_3.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
+
     #---------------------------------------------------------
     original_df['company_location'] = coco.convert(original_df['employee_residence'], to='ISO3')
     company_salary = original_df.groupby('company_location')['salary_in_usd'].mean()
@@ -343,38 +339,50 @@ def index():
     graphs.append(pio.to_html(fig))
 
     #---------------------------------------------------------
-    # exp_idx = original_df.experience_level.unique()
+    exp_idx = original_df.experience_level.unique()
 
-    # plt.figure(figsize=(10,6))
-    # sns.set_style('darkgrid')
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Junior'] , bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Senior'], bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Expert'], bw=.5)
-    # sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Director'], bw=.5)
+    plt.figure(figsize=(10,6))
+    sns.set_style('darkgrid')
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Junior'] , bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Senior'], bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Expert'], bw=.5)
+    sns.kdeplot(original_df['salary_in_usd'][original_df.experience_level == 'Director'], bw=.5)
 
-    # plt.legend(['Junior','Senior','Expert','Director'])
-    # plt.show()
+    plt.legend(['Junior','Senior','Expert','Director'])
+    image_path = static_path + 'seaborn_plot_4.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
     fig = px.box(original_df, x='experience_level', y='salary_in_usd', color='company_size', height=600, width=1100)
     graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
-    # from sklearn.preprocessing import LabelEncoder 
+    from sklearn.preprocessing import LabelEncoder 
 
-    # labeled_df = original_df
-    # obj_cols = labeled_df.select_dtypes(['object']).columns
+    labeled_df = original_df
+    obj_cols = labeled_df.select_dtypes(['object']).columns
 
-    # le = LabelEncoder()
-    # for col in obj_cols:
-    #     labeled_df[col] = le.fit_transform(labeled_df[col])
+    le = LabelEncoder()
+    for col in obj_cols:
+        labeled_df[col] = le.fit_transform(labeled_df[col])
 
-    # plt.figure(figsize=(10, 10))
-    # sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
-    # plt.show()
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
+    
+    image_path = static_path + 'seaborn_plot_5.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
     #---------------------------------------------------------
-
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
+    image_path = static_path + 'seaborn_plot_6.png'
+    plt.savefig(image_path)
+    plt.close()
+    image_paths.append(image_path)
 
     
-    return render_template('index.html', graph_html_list=graphs)
+    return render_template('index.html', graph_html_list=graphs, image_paths=image_paths)
 
 
 
