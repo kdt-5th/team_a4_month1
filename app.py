@@ -35,8 +35,8 @@ def index():
     graphs = []
     # 데이터 불러오기
     
-    # original_df = pd.read_csv('./archive/ds_salaries.csv')
-    original_df = pd.read_csv('C:/Users/Jena_laptop/Desktop/programers_kdt/project/data_science_salaries/data_science_salaries/archive/ds_salaries.csv')
+    original_df = pd.read_csv('./archive/ds_salaries.csv')
+    
 
     # 작업 분류
     # 직업과 해당 범주를 딕셔너리로 매핑
@@ -218,42 +218,6 @@ def index():
     # plt.tight_layout()
     
     # graph_html2 = pio.to_html(fig2)
-
-
-    #---------------------------------------------------------
-    # 데이터 로딩 예제 (데이터 로딩 부분은 실제 데이터에 맞게 수정해야 합니다)
-    # figs1, ax = plt.subplots(3,3, figsize=(15,15))
-    fig = make_subplots(rows=3, cols=3)
-    
-
-    # Plotly 그래프로 변환
-    fig_temp_2 = px.bar(original_df, x='work_year', color='work_year')
-    fig_temp_3 = px.bar(original_df, x='experience_level', color='experience_level')
-    fig_temp_4 = px.bar(original_df, x='employment_type', color='employment_type')
-    fig_temp_5 = px.histogram(original_df, x='salary_in_usd', nbins=20, color='salary_in_usd')
-    fig_temp_6 = px.bar(original_df, x='Country_Grouped', color='Country_Grouped')
-    fig_temp_7 = px.bar(original_df, x='remote_ratio', color='remote_ratio')
-    fig_temp_8 = px.bar(original_df, x='Company_Grouped', color='Company_Grouped')
-    fig_temp_9 = px.bar(original_df, x='company_size', color='company_size')
-    fig_temp_10 = px.bar(original_df, x='residence_continent', color='residence_continent')
-
-    # 그래프를 서브 플롯 위치에 배치
-    
-    fig.add_trace(fig_temp_2.data[0], row=1, col=1)
-    fig.add_trace(fig_temp_3.data[0], row=1, col=2)
-    fig.add_trace(fig_temp_4.data[0], row=1, col=3)
-    fig.add_trace(fig_temp_5.data[0], row=2, col=1)
-    fig.add_trace(fig_temp_6.data[0], row=2, col=2)
-    fig.add_trace(fig_temp_7.data[0], row=2, col=3)
-    fig.add_trace(fig_temp_8.data[0], row=3, col=1)
-    fig.add_trace(fig_temp_9.data[0], row=3, col=2)
-    fig.add_trace(fig_temp_10.data[0], row=3, col=3)
-       # 그래프 레이아웃 설정
-    fig.update_layout(height=600, width=800, showlegend=False, title_text='Subplots Example')
-
-    # HTML로 변환
-    graphs.append(pio.to_html(fig))
-
     #---------------------------------------------------------
     level_avg = original_df[['salary_in_usd', 'experience_level']].groupby('experience_level').mean()
 
@@ -266,19 +230,19 @@ def index():
     #---------------------------------------------------------
     # - 'work_year'별 'experience_level'기준 salary 변화
     
-    fig = px.line(original_df, x='work_year', y='salary_in_usd', color='experience_level', line_shape='linear')
+    # fig = px.line(original_df, x='work_year', y='salary_in_usd', color='experience_level', line_shape='linear')
 
-    # 제목, 레이블, 범례 폰트 크기 등의 추가 설정
-    fig.update_layout(
-        title="Salary vs. Work Year based on Experience Level",
-        xaxis_title="Work Year",
-        yaxis_title="Salary in USD",
-        legend_title="Experience Level",
-        legend_font_size=12
-    )
+    # # 제목, 레이블, 범례 폰트 크기 등의 추가 설정
+    # fig.update_layout(
+    #     title="Salary vs. Work Year based on Experience Level",
+    #     xaxis_title="Work Year",
+    #     yaxis_title="Salary in USD",
+    #     legend_title="Experience Level",
+    #     legend_font_size=12
+    # )
 
-    # HTML로 변환
-    graphs.append(pio.to_html(fig))
+    # # HTML로 변환
+    # graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
     # Job 분포
     total = len(original_df)
@@ -394,16 +358,18 @@ def index():
     fig = px.box(original_df, x='experience_level', y='salary_in_usd', color='company_size', height=600, width=1100)
     graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
-    from sklearn.preprocessing import LabelEncoder 
+    # from sklearn.preprocessing import LabelEncoder 
 
-    labeled_df = original_df
-    obj_cols = labeled_df.select_dtypes(['object']).columns
+    # labeled_df = original_df
+    # obj_cols = labeled_df.select_dtypes(['object']).columns
 
-    le = LabelEncoder()
-    for col in obj_cols:
-        labeled_df[col] = le.fit_transform(labeled_df[col])
+    # le = LabelEncoder()
+    # for col in obj_cols:
+    #     labeled_df[col] = le.fit_transform(labeled_df[col])
 
-    labeled_df
+    # plt.figure(figsize=(10, 10))
+    # sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
+    # plt.show()
     #---------------------------------------------------------
 
 
