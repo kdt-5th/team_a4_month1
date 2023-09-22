@@ -67,9 +67,9 @@ def index():
         'Machine Learning Researcher': '머신 러닝 엔지니어',
         'MLOps Engineer': '머신 러닝 엔지니어',
         'Research Engineer' : '머신 러닝 엔지니어',
-        'Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Applied Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Machine Learning Software Engineer' : '머신러닝 엔지니어',
+        'Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Applied Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Machine Learning Software Engineer' : '머신 러닝 엔지니어',
 
 
         'Marketing Data Engineer': '데이터 엔지니어',
@@ -176,10 +176,10 @@ def index():
     original_df['experience_level'] = original_df['experience_level'].replace('SE', 'Expert')
     original_df['experience_level'] = original_df['experience_level'].replace('EX', 'Director')
 
-    original_df['employment_type'] = original_df['employment_type'].replace('FT', ' Full-Time')
-    original_df['employment_type'] = original_df['employment_type'].replace('CT', ' Contract')
-    original_df['employment_type'] = original_df['employment_type'].replace('FL', ' Freelance')
-    original_df['employment_type'] = original_df['employment_type'].replace('PT', ' Part-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('FT', 'Full-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('CT', 'Contract')
+    original_df['employment_type'] = original_df['employment_type'].replace('FL', 'Freelance')
+    original_df['employment_type'] = original_df['employment_type'].replace('PT', 'Part-Time')
 
 
     #---------------------------------------------------------
