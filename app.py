@@ -1,16 +1,39 @@
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import plotly.io as pio
 import country_converter as coco
+import warnings
+import os, sys
+import matplotlib
+matplotlib.use('Agg')
 
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from xgboost import XGBRegressor
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from catboost import CatBoostRegressor, Pool
+from sklearn.metrics import mean_squared_error
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from predict_salary import predict
 plt.style.use('fivethirtyeight')
+
 
 app = Flask(__name__)
 
-@app.route('/')
+#현재 파일의 절대경로
+path = os.path.dirname(os.path.abspath(__file__)) 
+
+
+@app.route('/analysis')
 def index():
     static_path = 'static/'
 
@@ -20,9 +43,7 @@ def index():
     # 데이터 불러오기
     
     # original_df = pd.read_csv('./archive/ds_salaries.csv')
-    original_df = pd.read_csv('archive/ds_salaries.csv')
-
-    
+    original_df = pd.read_csv(os.path.join(path, "archive/ds_salaries.csv"))
 
     # 작업 분류
     # 직업과 해당 범주를 딕셔너리로 매핑
@@ -53,9 +74,9 @@ def index():
         'Machine Learning Researcher': '머신 러닝 엔지니어',
         'MLOps Engineer': '머신 러닝 엔지니어',
         'Research Engineer' : '머신 러닝 엔지니어',
-        'Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Applied Machine Learning Scientist' : '머신러닝 엔지니어',
-        'Machine Learning Software Engineer' : '머신러닝 엔지니어',
+        'Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Applied Machine Learning Scientist' : '머신 러닝 엔지니어',
+        'Machine Learning Software Engineer' : '머신 러닝 엔지니어',
 
 
         'Marketing Data Engineer': '데이터 엔지니어',
@@ -162,10 +183,10 @@ def index():
     original_df['experience_level'] = original_df['experience_level'].replace('SE', 'Expert')
     original_df['experience_level'] = original_df['experience_level'].replace('EX', 'Director')
 
-    original_df['employment_type'] = original_df['employment_type'].replace('FT', ' Full-Time')
-    original_df['employment_type'] = original_df['employment_type'].replace('CT', ' Contract')
-    original_df['employment_type'] = original_df['employment_type'].replace('FL', ' Freelance')
-    original_df['employment_type'] = original_df['employment_type'].replace('PT', ' Part-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('FT', 'Full-Time')
+    original_df['employment_type'] = original_df['employment_type'].replace('CT', 'Contract')
+    original_df['employment_type'] = original_df['employment_type'].replace('FL', 'Freelance')
+    original_df['employment_type'] = original_df['employment_type'].replace('PT', 'Part-Time')
 
 
     #---------------------------------------------------------
@@ -217,17 +238,15 @@ def index():
 
     #---------------------------------------------------------
     # - 'work_year'별 'experience_level'기준 salary 변화
-    
-    fig = px.line(original_df, x='work_year', y='salary_in_usd', color='experience_level', line_shape='linear')
 
-    # 제목, 레이블, 범례 폰트 크기 등의 추가 설정
-    fig.update_layout(
-        title="Salary vs. Work Year based on Experience Level",
-        xaxis_title="Work Year",
-        yaxis_title="Salary in USD",
-        legend_title="Experience Level",
-        legend_font_size=12
-    )
+    plt.figure(figsize=(13,7))
+
+    sns.set_style('darkgrid')
+    sns.lineplot(x='work_year', y='salary_in_usd', hue='experience_level', data=original_df, errorbar=None)
+    plt.title("Salary vs. Work Year based on Experience Level")
+
+    plt.legend(title="Experience Level", fontsize=12)
+
 
     # HTML로 변환
     image_path = static_path + 'seaborn_plot_2.png'
@@ -274,7 +293,7 @@ def index():
                 x = sal_per.index,
                 color= sal_per.index,
                 color_discrete_sequence=px.colors.qualitative.G10,
-                text = sal_per['count'],
+                text = sal_per['jobs'],
                 title='Top10 Jobs - Salary',
                 template='ggplot2'
                 )
@@ -354,7 +373,7 @@ def index():
     plt.close()
     image_paths.append(image_path)
     #---------------------------------------------------------
-    fig = px.box(original_df, x='experience_level', y='salary_in_usd', color='company_size', height=600, width=1100)
+    fig = px.box(original_df, x='experience_level', y='salary_in_usd', color='company_size')
     graphs.append(pio.to_html(fig))
     #---------------------------------------------------------
     from sklearn.preprocessing import LabelEncoder 
@@ -366,7 +385,7 @@ def index():
     for col in obj_cols:
         labeled_df[col] = le.fit_transform(labeled_df[col])
 
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(10, 12))
     sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
     
     image_path = static_path + 'seaborn_plot_5.png'
@@ -374,7 +393,7 @@ def index():
     plt.close()
     image_paths.append(image_path)
     #---------------------------------------------------------
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(13, 13))
     sns.heatmap(labeled_df.corr(), annot=True,fmt = '.2f', linewidths=.5, cmap='Blues')
     image_path = static_path + 'seaborn_plot_6.png'
     plt.savefig(image_path)
@@ -382,9 +401,27 @@ def index():
     image_paths.append(image_path)
 
     
-    return render_template('index.html', graph_html_list=graphs, image_paths=image_paths)
+    return render_template('analysis.html', graph_html_list=graphs, image_paths=image_paths)
+
+# 예측값 계산용
+@app.route('/submit/', methods=['POST'])
+def predict_calc():
+    salary = predict(request)
+    return jsonify({"val":salary})
 
 
+@app.route('/predict')
+def predict_sal():
+    return render_template('predict.html')
+
+@app.route('/')
+def home_page():
+    return render_template('home.html')
+
+@app.route('/conclusion')
+def conclusion_page():
+    return render_template('conclusion.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
+
